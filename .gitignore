@@ -6,6 +6,6 @@ ocsinventoryng
 .install
 .install-plugins
 .env
-node_modules
-npm-debug.log
 environment/env.mk
+secrets
+*.log
