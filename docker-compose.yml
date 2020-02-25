@@ -1,77 +1,93 @@
-version: '3'
+version: "3.1"
+
 services:
-  ocsinventory:
-    image: ocsinventory/ocsinventory-docker-image:2.5
-    environment:
-      OCS_DBNAME: ocs
-      OCS_DBSERVER_READ: db-ocs
-      OCS_DBSERVER_WRITE: db-ocs
-      OCS_DBUSER: ocs
-      OCS_DBPASS: ocs
-    volumes:
-      - ocssrv:/usr/share/ocsinventory-reports/
-      - ocssrv:/etc/ocsinventory-reports/
-      - ocssrv:/var/lib/ocsinventory-reports/
+
+  # same database server used for both glpi and ocs
+  mariadb:
+    container_name: mariadb
+    image: mariadb:10.4
+    restart: always
     ports:
-      - 8080:80
-
-  php:
-    depends_on:
-      - glpi
-    image: php:7.0-fpm
-    container_name: glpi-server
-    volumes:
-      - ./glpi:/var/www/html
-
-  nginx:
-    depends_on:
-      - glpi
-    image: nginx:latest
-    container_name: nginx
-    volumes:
-      - ./nginx:/etc/nginx/conf.d
-      - ./glpi:/var/www/html
-
-  db-glpi:
-    image: mysql:5.7
-    container_name: glpi-db
-    restart: always
+      - 3306:3306
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: glpi
-      MYSQL_PASSWORD: glpi
-      MYSQL_DATABASE: glpi
-    volumes:
-      - glpidata:/var/lib/mysql
-
-  db-ocs:
-    image: mysql:5.7
-    container_name: ocs-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: ocs
-      MYSQL_PASSWORD: ocs
-      MYSQL_DATABASE: ocs
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+      MYSQL_DATABASE: ocsdb
+      MYSQL_USER: ocs_admin
+      MYSQL_PASSWORD_FILE: /run/secrets/ocs_password
+    secrets:
+      - ocs_password
+      - glpi_password
     volumes:
       - ./sql/:/docker-entrypoint-initdb.d/
-      - ocsdata:/var/lib/mysql
+      - sqldata:/var/lib/mysql
+    networks:
+      - parc
 
-  #GLPI Container
+  ocsapplication:
+    image: ocsinventory/ocsinventory-docker-image:2.6
+    container_name : ocsinventory-server
+    restart: always
+    ports:
+      - 8080:80
+      #- 443:443
+    volumes:
+      - "ocs_perlcomdata:/etc/ocsinventory-server"
+      - "ocs_extensionsdata:/usr/share/ocsinventory-reports/ocsreports/extensions"
+      - "ocs_varlibdata:/var/lib/ocsinventory-reports"
+      - "ocs_httpdconfdata:/etc/httpd/conf.d"
+    environment:
+      - OCS_DB_SERVER=mariadb
+      - OCS_DB_USER=ocs_admin
+      - OCS_DB_PASS=${OCS_PASS} # Not necessary to use Docker secrets
+      - OCS_DB_NAME=ocsdb
+    networks:
+      - parc
+    depends_on:
+      - mariadb
+
   glpi:
     image: diouxx/glpi
     container_name : glpi
+    hostname: glpi
     ports:
-      - "80:80"
+      - 80:80
+    networks:
+      parc:
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ./glpi:/var/www/html/glpi
     environment:
       - TIMEZONE=${TIMEZONE}
       - TZ=${TZ}
     restart: always
 
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 8000:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=db
+    depends_on:
+      - mariadb
+    volumes:
+      - /sessions
+    networks:
+      parc:
+
+secrets:
+  ocs_password:
+    file: ./secrets/OCS_DB_PASSWORD
+  glpi_password:
+    file: ./secrets/GLPI_DB_PASSWORD
+
+networks:
+  parc:
+
 volumes:
-  ocsdata:
-  glpidata:
-  ocssrv:
+  ocs_perlcomdata:
+  ocs_extensionsdata:
+  ocs_varlibdata:
+  ocs_httpdconfdata:
+  sqldata:
+
