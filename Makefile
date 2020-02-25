@@ -3,7 +3,6 @@ DOCKER_COMPOSE := $(shell which docker-compose)
 MKDIR := $(shell which mkdir)
 SUB_MAKE := $(shell which make)
 
-
 clean/%:
 	rm -f ./$*
 
@@ -47,12 +46,21 @@ hard-stop: ## Stop project AND REMOVE ALL VOLUME (except glpi app installation)
 .env: environment/env.mk ## Configure environment variable available for docker-compose
 	echo "TZ=$(TZ)" > .env
 	echo "TIMEZONE=$(TIMEZONE)" >> .env
+	@echo "OCS_PASS=`cat secrets/OCS_DB_PASSWORD`" >> .env
 
 environment/env.mk: | environment/env.mk.dist
 	cp $(word 1,$|) $@
 
 environment/env.mk.dist:
 	$(error "This file should exist")
+
+clean: check_clean hard-stop clean/.install clean/.install-plugins clean/.env clean/environment/env.mk ## Stop and remove all
+	sudo rm -rf ./glpi
+
+check_clean:
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+
+.PHONY: clean check_clean
 
 .PHONY: help
 help:
