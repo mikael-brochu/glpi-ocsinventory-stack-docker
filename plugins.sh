@@ -6,6 +6,6 @@ echo "-- Installations of whole plugins --"
 
 echo "-- Install of plugin ocsinventoryng --"
 
-wget -qO- https://github.com/pluginsGLPI/ocsinventoryng/releases/download/1.5.4/glpi-ocsinventoryng-1.5.4.tar.gz | sudo -H -u $(stat -c '%U' glpi) tar xvz -C ./glpi/plugins
+wget -qO- https://github.com/pluginsGLPI/ocsinventoryng/releases/download/1.6.0/glpi-ocsinventoryng-1.6.0.tar.gz | sudo -H -u $(stat -c '%U' glpi) tar xvz -C ./glpi/plugins
 
 echo "-- Install success --"
