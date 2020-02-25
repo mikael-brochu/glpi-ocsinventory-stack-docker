@@ -7,5 +7,4 @@ ocsinventoryng
 .install-plugins
 .env
 environment/env.mk
-secrets
 *.log

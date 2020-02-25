@@ -4,17 +4,21 @@
 
 ## TL;DR
 
-#### First: install with make
+#### First: passwords
+
+Edit the files in `secret` with the desired password for each.
+
+#### Second: environment
+
+On `environment/env.mk`, set your `TZ` and `TIMEZONE` value.
+
+#### Third: install with make
 
 Make is install so only do a : 
 
 `make install`
 
-#### Second: environment
-
-On `environment/env.mk` set your `TZ` and `TIMEZONE` value.
-
-#### Third: start
+#### Fourth: start
 
 `make start`
 
@@ -26,6 +30,7 @@ TIPS:
  - Only do a `make` to see allowed task and you see :
 
 ```
+clean          Stop and remove all
 .env           Configure environment variable available for docker-compose
 hard-restart   Restart project AND REMOVE ALL VOLUME (except glpi app installation)
 hard-stop      Stop project AND REMOVE ALL VOLUME (except glpi app installation)
@@ -39,7 +44,7 @@ stop           Stop project
 
 #### Reinstallation
 
-Whole reinstall ( **/!\ ALL WILL BE REMOVES /!\\** ) and you have to do reset your env value (Second step):
+Whole reinstall ( **/!\ ALL WILL BE REMOVED /!\\** ) and you have to do reset your env value (Second step):
 
 `make reinstall`
 
@@ -49,6 +54,7 @@ It will start up all the environment:
 
 1. OCS stack on port `8080`
 2. GLPI project + DB & config on port `80`
+3. phpMyAdmin on port `8000`
 
 #### GLPI
 
